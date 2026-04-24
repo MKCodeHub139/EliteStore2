@@ -31,12 +31,13 @@ class AdminController extends Controller
     }
 
     // dashboard
-    public function dashboard(){
+    public function dashboard()
+    {
         $orders = Order::get();
         $categories = Category::get();
-        $products =Product::get();
-        $users =User::get();
-        return view('admin.pages.dashboard', compact('orders','categories','products','users'));
+        $products = Product::get();
+        $users = User::get();
+        return view('admin.pages.dashboard', compact('orders', 'categories', 'products', 'users'));
     }
     // products data for datatable
     public function productsData(Request $request)
@@ -87,10 +88,10 @@ class AdminController extends Controller
             'discount_price' => 'numeric|nullable',
             'cost_price' => 'numeric|required',
             'stock_quantity' => 'integer|nullable',
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'main_image' => 'nullable|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
             'gallery_images' => 'nullable|array',
-            'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'warenty'=>'nullable|String',
+            'gallery_images.*' => 'mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
+            'warenty' => 'nullable|String',
             'has_variants' => 'boolean',
             'variant_type' => 'string|nullable',
             'status' => 'string|in:active,inactive',
@@ -101,24 +102,24 @@ class AdminController extends Controller
             // add more validation rules as needed
         ]);
         // set price
-        $price=$validated['old_price'];
-        if($validated['discount_price']){
-            $price =$validated['old_price'] -$validated['discount_price'];
+        $price = $validated['old_price'];
+        if ($validated['discount_price']) {
+            $price = $validated['old_price'] - $validated['discount_price'];
         }
         // slug logic
-        $slug =Str::slug($validated['name']);
-        $originalSlug =$slug;
-        $count=1;
-        while(Product::where('slug',$slug)->exists()){
-            $slug =$originalSlug.'-'.$count++;
+        $slug = Str::slug($validated['name']);
+        $originalSlug = $slug;
+        $count = 1;
+        while (Product::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $count++;
         }
         // sku logic
-        $sku ='PROD'.'-'.strtoupper(Str::random(6));
+        $sku = 'PROD' . '-' . strtoupper(Str::random(6));
 
         $keyFeatures = explode(",", $request->key_features);
         if ($request->hasFile('main_image')) {
             $mainImage = $request->file('main_image');
-            $mainImageName = time() . '_' . $mainImage->getClientOriginalExtension();
+            $mainImageName = time() . '_' . uniqid() . '.' . $mainImage->getClientOriginalExtension();
             $mainImage->move(public_path('uploads/products'), $mainImageName);
             $validated['main_image'] = 'uploads/products/' . $mainImageName;
         }
@@ -143,10 +144,10 @@ class AdminController extends Controller
             'discount_price' => $validated['discount_price'] ?? null,
             'cost_price' => $validated['cost_price'] ?? null,
             'stock_quantity' => $validated['stock_quantity'] ?? 0,
-            'sku'=>$sku,
+            'sku' => $sku,
             'main_image' => $validated['main_image'] ?? null,
             'gallery_images' => $galleryImageNames ?? null,
-            'warenty'=>$validated['warenty'] ?? 0,
+            'warenty' => $validated['warenty'] ?? 0,
             'has_variants' => $validated['has_variants'] ?? false,
             'variant_type' => $validated['variant_type'] ?? null,
             'status' => $validated['status'] ?? 'inactive',
@@ -172,6 +173,7 @@ class AdminController extends Controller
     }
     public function updateProduct(Request $request, $id)
     {
+        if (!is_writable(public_path('uploads/products'))) {
         $product = Product::findOrFail($id);
         $validated = $request->validate([
             'name' => 'string|required',
@@ -184,10 +186,10 @@ class AdminController extends Controller
             'discount_price' => 'numeric|nullable',
             'cost_price' => 'numeric|nullable',
             'stock_quantity' => 'integer|nullable',
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'main_image' => 'nullable|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
             'gallery_images' => 'nullable|array',
-            'gallery_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-             'warenty'=>'nullable|String',
+            'gallery_images.*' => 'mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
+            'warenty' => 'nullable|String',
             'has_variants' => 'boolean',
             'variant_type' => 'string|nullable',
             'status' => 'string|in:Active,Inactive',
@@ -196,19 +198,19 @@ class AdminController extends Controller
             'is_hot' => 'boolean|nullable',
             'is_new' => 'boolean|nullable',
         ]);
-         // set price
-        $price=$validated['old_price'];
-        if($validated['discount_price']){
-            $price =$validated['old_price'] -$validated['discount_price'];
+        // set price
+        $price = $validated['old_price'];
+        if ($validated['discount_price']) {
+            $price = $validated['old_price'] - $validated['discount_price'];
         }
         // slug logic
-        $slug=$product->slug;
-        if($validated['name'] !=$product->name){
-            $slug =Str::slug($validated['name']);
-            $originalSlug =$slug;
-            $count =1;
-            while(Product::where('slug',$slug)->exists()){
-                $slug=$originalSlug.'-'.$count++;
+        $slug = $product->slug;
+        if ($validated['name'] != $product->name) {
+            $slug = Str::slug($validated['name']);
+            $originalSlug = $slug;
+            $count = 1;
+            while (Product::where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $count++;
             }
         }
         $keyFeatures = explode(",", $request->key_features);
@@ -220,7 +222,7 @@ class AdminController extends Controller
                 }
             }
             $mainImage = $request->file('main_image');
-            $mainImageName = time() . '_' . $mainImage->getClientOriginalExtension();
+            $mainImageName = time() . '_' . uniqid() . '.' . $mainImage->getClientOriginalExtension();
             $mainImage->move(public_path('uploads/products'), $mainImageName);
             $validated['main_image'] = 'uploads/products/' . $mainImageName;
         }
@@ -239,17 +241,18 @@ class AdminController extends Controller
                 $galleryImage->move(public_path('uploads/products'), $name);
                 $galleryImageNames[] = 'uploads/products/' . $name;
             }
-        $validated['gallery_images'] = $galleryImageNames;
+            $validated['gallery_images'] = $galleryImageNames;
         }
         $validated['key_features'] = $keyFeatures;
         // save price
-        $product->price =$price;
-        $product->slug =$slug;
+        $product->price = $price;
+        $product->slug = $slug;
         if ($product->update($validated)) {
             return response()->json(['success' => true, 'message' => 'Product updated successfully.']);
         } else {
             return response()->json(['success' => false, 'message' => 'Failed to updated product.']);
         }
+    }
     }
     // categories data for datatable
     public function categoriesData(Request $request)

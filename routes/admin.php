@@ -77,4 +77,16 @@ Route::get('/logout', function(){
         ->with('success', 'Logged out successfully');
 
 })->name('admin.logout');
+Route::get('/write-debug', function () {
+
+    $dir = public_path('uploads/products');
+    $file = $dir . '/test.txt';
+
+    return [
+        'exists' => file_exists($dir),
+        'is_dir' => is_dir($dir),
+        'writable' => is_writable($dir),
+        'realpath' => realpath($dir),
+    ];
+});
 });
