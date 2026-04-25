@@ -19,7 +19,6 @@ RUN composer install --no-dev --optimize-autoloader
 
 # 🔥 IMPORTANT: Install node deps & build assets
 RUN npm install && npm run build
-RUN php artisan migrate:fresh --seed
 
 EXPOSE 10000
 
